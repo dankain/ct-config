@@ -3,7 +3,7 @@ Purpose
 
 It is a proof of concept to demonstrate how to join following solutions
     - CircleCI - a ci system
-    - AWS - a could provider
+    - AWS - a cloud provider
     - Commercetools - a cloud based commerce provider
     - Terraform - a cloud management tool
 
