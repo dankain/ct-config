@@ -16,7 +16,7 @@ Scope
 4. Configure circeci
     - use AWS ec2 parameter store to store Commercetools credentials
 4. Configure terraform template
-    - to lock the a deployment
+    - to lock the deployment
     - to store the state in S3 bucket
 5. Perform following operations:
     - create an object
@@ -34,7 +34,7 @@ if next steps fails it will required manual intervention
 Step 1
 ------
 
-Create a AWS account which gives circleci access to AWS infrastructure to pull configuration required to setup subscription in commercetools.
+Create a AWS account which gives CircleCI access to AWS infrastructure to pull configuration required to setup subscription in commercetools.
 
 1. Login to AWS 
 2. Create a user named e.g. CI by giving only programmatic access
@@ -43,7 +43,7 @@ Create a AWS account which gives circleci access to AWS infrastructure to pull c
 Step 2 
 -------
 
-Configure circleci by navigating to project list and select a gear box. You will be taken to the `Project Settings` where you will have to configure following envrionment variables by clicking `Environment Variables` in the `Build Settings` section.
+Configure CircleCI by navigating to project list and select a gear box. You will be taken to the `Project Settings` where you will have to configure following envrionment variables by clicking `Environment Variables` in the `Build Settings` section.
 
 | Name | Value |
 | ---- | ----- |
@@ -57,7 +57,7 @@ Configure AWS platform with secrets to access commercetools platform:
 
 ```bash
 aws ssm put-parameter --name /api/commercetools/<replace_with_project_name>/client_id --type SecureString --value <commercetools_client_id>
-aws ssm put-parameter --name /api/commercetools/<replace_with_project_name>/secret --type SecureString --value <commercetools_client_id>
+aws ssm put-parameter --name /api/commercetools/<replace_with_project_name>/secret --type SecureString --value <commercetools_secret>
 aws ssm put-parameter --name /api/commercetools/<replace_with_project_name>/scope --type SecureString --value <commercetools_scope>
 ```
 
