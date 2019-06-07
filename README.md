@@ -99,7 +99,63 @@ CT_TOKEN=$(echo $CT_AUTH_RESULT | jq -r '.access_token')
 curl -H "Authorization: Bearer ${CT_TOKEN}" https://api.sphere.io/lego-poc/categories
 ```
 
+Local execution
+----------------
+Needed tools:
+- docker
+- git 
+
+Create a local version of the docker build:
+
+```bash
+tools/create-build-images.sh
+```
+
+Verify that image is created:
+```bash
+docker images | grep cmt-build
+```
+
+Next export all commerce tools envrionment variables:
+```bash
+export CTP_PROJECT_KEY=lego-poc
+export CTP_CLIENT_SECRET=$(aws ssm get-parameter --name /api/commercetools/lego-poc/secret --with-decryption | jq -r '.Parameter.Value')
+export CTP_CLIENT_ID=$(aws ssm get-parameter --name /api/commercetools/lego-poc/client_id --with-decryption | jq -r '.Parameter.Value')
+export CTP_AUTH_URL="https://auth.sphere.io"
+export CTP_API_URL="https://api.sphere.io"
+export CTP_SCOPES=$(aws ssm get-parameter --name /api/commercetools/lego-poc/scope --with-decryption | jq -r '.Parameter.Value')
+```
+
+Initialise the terraform:
+```bash
+# TF_LOG=debug terraform apply
+scripts/local-terraform.sh init
+```
+
+Run plan on for deployment:
+```bash
+# TF_LOG=debug terraform apply
+scripts/local-terraform.sh plan
+```
+
+Run apply on for deployment:
+```bash
+# TF_LOG=debug terraform apply
+scripts/local-terraform.sh apply --auto-approve
+```
+
+Verity product types applied correctly:
+```bash
+curl -H "Authorization: Bearer ${CT_TOKEN}" https://api.sphere.io/${CTP_PROJECT_KEY}/product-types/ | jq
+```
+
+Todo
+----
+
+- [ ] Before making it public remove all references to `lego-poc`
+
 Resources
 ---------
 * [Terraform documentation](https://www.terraform.io/docs/index.html)
+* [Terraform state management & workspaces](https://www.terraform.io/docs/backends/types/s3.html)
 * [Terraform Commercetools Plugin](https://commercetools-terraform-provider.readthedocs.io/en/latest/)
