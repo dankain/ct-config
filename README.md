@@ -2,10 +2,11 @@ Purpose
 -------
 
 It is a proof of concept to demonstrate how to join following solutions
-    - CircleCI - a ci system
-    - AWS - a cloud provider
-    - Commercetools - a cloud based commerce provider
-    - Terraform - a cloud management tool
+
+- CircleCI - a ci system
+- AWS - a cloud provider
+- Commercetools - a cloud based commerce provider
+- Terraform - a cloud management tool
 
 Scope
 -----
@@ -31,7 +32,7 @@ Error assumptions
 the configuration fails all should stop
 if next steps fails it will required manual intervention
 
-Step 1
+Step 1 - Configure AWS CI User
 ------
 
 Create a AWS account which gives CircleCI access to AWS infrastructure to pull configuration required to setup subscription in commercetools.
@@ -40,7 +41,7 @@ Create a AWS account which gives CircleCI access to AWS infrastructure to pull c
 2. Create a user named e.g. CI by giving only programmatic access
 3. Download credentials.csv
 
-Step 2 
+Step 2 - Configure CircleCI
 -------
 
 Configure CircleCI by navigating to project list and select a gear box. You will be taken to the `Project Settings` where you will have to configure following envrionment variables by clicking `Environment Variables` in the `Build Settings` section.
@@ -50,7 +51,7 @@ Configure CircleCI by navigating to project list and select a gear box. You will
 | AWS_ACCESS_KEY_ID | value from credentials.csv | 
 | AWS_SECRET_ACCESS_KEY | value from credentials.csv | 
 
-Step 3
+Step 3 - Configure EC2 Parameters
 ------
 
 Configure AWS platform with secrets to access commercetools platform:
@@ -99,11 +100,32 @@ CT_TOKEN=$(echo $CT_AUTH_RESULT | jq -r '.access_token')
 curl -H "Authorization: Bearer ${CT_TOKEN}" https://api.sphere.io/lego-poc/categories
 ```
 
-Local execution
+Step 4 - Configure CI User Policies
+----------------
+
+TODO:....
+
+Step 5 - Publish Docker Image
+----------------
+
+TODO:....
+
+Step 6 - Connect all the piecies
+----------------
+
+TODO:....
+
+How to run locally
 ----------------
 Needed tools:
 - docker
 - git 
+
+Create `s3` bucket for storing state and `dynamodb` to lock state update
+```bash
+scripts/aws-init.sh init
+scripts/aws-init.sh apply --auto-approve
+```
 
 Create a local version of the docker build:
 
@@ -149,10 +171,61 @@ Verity product types applied correctly:
 curl -H "Authorization: Bearer ${CT_TOKEN}" https://api.sphere.io/${CTP_PROJECT_KEY}/product-types/ | jq
 ```
 
+Debug
+-----
+
+Using Commercetools plugin in most cases you don't get useful error message except EOF e.g.
+
+```
+2 errors occurred:
+        * commercetools_product_type.gift_card_type: 1 error occurred:
+        * commercetools_product_type.gift_card_type: unexpected EOF
+```
+
+In following cases you can just create use `docker run` to create container debug the problem.
+
+Create a container:
+```bash
+docker run \
+    --env CTP_PROJECT_KEY \
+    --env CTP_CLIENT_SECRET \
+    --env CTP_CLIENT_ID \
+    --env CTP_AUTH_URL \
+    --env CTP_API_URL \
+    --env CTP_SCOPES \
+    --env AWS_ACCESS_KEY_ID \
+    --env AWS_SECRET_ACCESS_KEY \
+    --env AWS_SESSION_TOKEN \
+    -v ${PWD}/config:/config \
+    --entrypoint '/bin/sh' \
+    -it \
+    --rm \
+    cmt-build
+```
+
+From docker you can run Terraform commands with debug mode
+
+```bash
+# TF_LOG=DEBUG terraform apply
+2019-06-08T19:36:01.047Z [DEBUG] plugin.terraform-provider-commercetools_v0.9.0: Response: {"statusCode":401,"message":"Please provide valid
+client credentials using HTTP Basic Authentication.","errors":[{"code":"invalid_client","message":"Please provide valid client credentials us
+ing HTTP Basic Authentication."}],"error":"invalid_client","error_description":"Please provide valid client credentials using HTTP Basic Auth
+entication."}
+```
+
+
+Gotchas
+-------
+
+- `master` version of the Commercetools Provider does not work, it throws error when executing `apply`
+- Commercetools provider version 0.9 only works with Terraform version 0.11
+
 Todo
 ----
 
 - [ ] Before making it public remove all references to `lego-poc`
+- [ ] Extend POC to add ability to deploy between multiple accounts
+- [ ] S3 enable lifecycle rules
 
 Resources
 ---------
