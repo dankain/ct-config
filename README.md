@@ -223,9 +223,11 @@ Gotchas
 Todo
 ----
 
+- [ ] ! Remove aws/terraform.tfstate
 - [ ] Before making it public remove all references to `lego-poc`
 - [ ] Extend POC to add ability to deploy between multiple accounts
 - [ ] S3 enable lifecycle rules
+- [ ] Add tags to all `aws` resources
 
 Resources
 ---------
