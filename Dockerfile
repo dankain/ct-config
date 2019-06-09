@@ -6,7 +6,7 @@ RUN wget https://github.com/labd/terraform-provider-commercetools/releases/downl
     mv terraform-provider-commercetools_v0.9.0 /root/.terraform.d/plugins
 
 RUN apk update; \
-    apk add python3; \
+    apk add python3 jq; \
     curl -O https://bootstrap.pypa.io/get-pip.py; \
     python3 get-pip.py --user; \
     pip3 install awscli --upgrade --user

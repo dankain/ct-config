@@ -52,6 +52,7 @@ Configure CircleCI by navigating to project list and select a gear box. You will
 | ---- | ----- |
 | AWS_ACCESS_KEY_ID | value from credentials.csv | 
 | AWS_SECRET_ACCESS_KEY | value from credentials.csv | 
+| AWS_DEFAULT_REGION | value default region e.g us-east-1 |
 
 Step 3 - Configure EC2 Parameters
 ------
