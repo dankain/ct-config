@@ -1,3 +1,5 @@
+variable "subscription_access_key" {}
+variable "subscriptoin_secret_key" {}
 # https://www.terraform.io/docs/backends/types/s3.html
 terraform {
   backend "s3" {
@@ -85,8 +87,8 @@ resource "commercetools_subscription" "test_subscription" {
   destination {
     type          = "SQS"
     queue_url     = "${data.aws_sqs_queue.commercetools_sqs.id}"
-    # access_key    = ""
-    # access_secret = ""
+    access_key    = "${var.subscription_access_key}"
+    access_secret = "${var.subscriptoin_secret_key}"
     region        = "${data.aws_region.current.name}"
   }
 

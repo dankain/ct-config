@@ -14,6 +14,8 @@ docker run \
     --env CTP_AUTH_URL \
     --env CTP_API_URL \
     --env CTP_SCOPES \
+    --env CTP_SUBSCRIPTION_ACCESS_KEY \
+    --env CTP_SUBSCRIPTION_SECRET_KEY \
     --env AWS_ACCESS_KEY_ID \
     --env AWS_SECRET_ACCESS_KEY \
     --env AWS_SESSION_TOKEN \

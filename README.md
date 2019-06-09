@@ -60,6 +60,8 @@ Configure AWS platform with secrets to access commercetools platform:
 aws ssm put-parameter --name /api/commercetools/<replace_with_project_name>/client_id --type SecureString --value <commercetools_client_id>
 aws ssm put-parameter --name /api/commercetools/<replace_with_project_name>/secret --type SecureString --value <commercetools_secret>
 aws ssm put-parameter --name /api/commercetools/<replace_with_project_name>/scope --type SecureString --value <commercetools_scope>
+aws ssm put-parameter --name /api/commercetools/lego-poc/subscription_access_key --type SecureString --value <aws_access_key>
+aws ssm put-parameter --name /api/commercetools/lego-poc/subscription_secret_key --type SecureString --value <aws_secret_key>
 ```
 
 Verify all parameters have been added correctly:
@@ -108,7 +110,12 @@ TODO:....
 Step 5 - Publish Docker Image
 ----------------
 
-TODO:....
+If you don't have a user in docker hub create an account to publish an image. 
+
+```bash
+docker tag cmt-build kamaz/cmt-build
+docker push kamaz/cmt-build
+```
 
 Step 6 - Connect all the piecies
 ----------------
@@ -146,24 +153,23 @@ export CTP_CLIENT_ID=$(aws ssm get-parameter --name /api/commercetools/lego-poc/
 export CTP_AUTH_URL="https://auth.sphere.io"
 export CTP_API_URL="https://api.sphere.io"
 export CTP_SCOPES=$(aws ssm get-parameter --name /api/commercetools/lego-poc/scope --with-decryption | jq -r '.Parameter.Value')
+export CTP_SUBSCRIPTION_ACCESS_KEY=$(aws ssm get-parameter --name /api/commercetools/lego-poc/subscription_access_key --with-decryption | jq -r '.Parameter.Value')
+export CTP_SUBSCRIPTION_SECRET_KEY=$(aws ssm get-parameter --name /api/commercetools/lego-poc/subscription_secret_key --with-decryption | jq -r '.Parameter.Value')
 ```
 
 Initialise the terraform:
 ```bash
-# TF_LOG=debug terraform apply
 scripts/local-terraform.sh init
 ```
 
 Run plan on for deployment:
 ```bash
-# TF_LOG=debug terraform apply
-scripts/local-terraform.sh plan
+scripts/local-terraform.sh plan -var "subscription_access_key=${CTP_SUBSCRIPTION_ACCESS_KEY}" -var "subscriptoin_secret_key=${CTP_SUBSCRIPTION_SECRET_KEY}"
 ```
 
 Run apply on for deployment:
 ```bash
-# TF_LOG=debug terraform apply
-scripts/local-terraform.sh apply --auto-approve
+scripts/local-terraform.sh apply --auto-approve -var "subscription_access_key=${CTP_SUBSCRIPTION_ACCESS_KEY}" -var "subscriptoin_secret_key=${CTP_SUBSCRIPTION_SECRET_KEY}"
 ```
 
 Verity product types applied correctly:
@@ -193,6 +199,8 @@ docker run \
     --env CTP_AUTH_URL \
     --env CTP_API_URL \
     --env CTP_SCOPES \
+    --env CTP_SUBSCRIPTION_ACCESS_KEY \
+    --env CTP_SUBSCRIPTION_SECRET_KEY \
     --env AWS_ACCESS_KEY_ID \
     --env AWS_SECRET_ACCESS_KEY \
     --env AWS_SESSION_TOKEN \
