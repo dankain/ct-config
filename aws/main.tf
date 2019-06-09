@@ -23,6 +23,49 @@ resource "aws_dynamodb_table" "terraform_state_lock" {
   }
 }
 
+# Configure ci user
+resource "aws_iam_user_policy" "ci_user" {
+  name = "ci-user"
+  user = "ci"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+      {
+        "Effect": "Allow",
+        "Action": "s3:ListBucket",
+        "Resource": "${aws_s3_bucket.terraform_state.arn}"
+      },
+      {
+        "Effect": "Allow",
+        "Action": ["s3:GetObject", "s3:PutObject"],
+        "Resource": "${aws_s3_bucket.terraform_state.arn}/*"
+      },
+      {
+        "Effect": "Allow",
+        "Action": [
+          "dynamodb:GetItem",
+          "dynamodb:PutItem",
+          "dynamodb:DeleteItem"
+        ],
+        "Resource": "${aws_dynamodb_table.terraform_state_lock.arn}"
+      },
+      {
+        "Effect": "Allow",
+        "Action": [
+          "ssm:GetParameters",
+          "ssm:GetParameter"
+        ],
+        "Resource": "arn:aws:ssm:*:406575831881:parameter/api/commercetools/*"
+      }
+  ]
+}
+EOF
+}
+# ^^ replace account number with configuration from aws 
+
+
 # From here you see specific configuration for Commercetools to create a subscription
 resource "aws_iam_user" "commercetools_subscription" {
   name = "commercetools-subscription"

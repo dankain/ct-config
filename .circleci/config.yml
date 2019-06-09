@@ -8,8 +8,8 @@ jobs:
       - checkout
 
       - run:
-          name: Export Envrionment Variables
-          command: >
+        name: Export Envrionment Variables
+          command: |
             export CTP_PROJECT_KEY=lego-poc
             export CTP_CLIENT_SECRET=$(aws ssm get-parameter --name /api/commercetools/lego-poc/secret --with-decryption | jq -r '.Parameter.Value')
             export CTP_CLIENT_ID=$(aws ssm get-parameter --name /api/commercetools/lego-poc/client_id --with-decryption | jq -r '.Parameter.Value')
