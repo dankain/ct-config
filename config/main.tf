@@ -98,7 +98,7 @@ data "aws_region" "current" {
 
 resource "commercetools_subscription" "test_subscription" {
   key = "test-subscription"
-
+# https://devops.stackexchange.com/questions/79/how-can-i-manage-secrets-in-tf-and-tfstate
   destination {
     type          = "SQS"
     queue_url     = "${data.aws_sqs_queue.commercetools_sqs.id}"
