@@ -29,8 +29,10 @@ Scope
 Error assumptions
 -----------------
 
-the configuration fails all should stop
-if next steps fails it will required manual intervention
+- the configuration fails all should stop
+- if next steps fails it will required manual intervention
+
+TODO: explain directories and their purpose
 
 Step 1 - Configure AWS CI User
 ------
@@ -137,7 +139,7 @@ scripts/aws-init.sh apply --auto-approve
 Create a local version of the docker build:
 
 ```bash
-tools/create-build-images.sh
+scripts/create-build-images.sh
 ```
 
 Verify that image is created:
@@ -214,19 +216,18 @@ docker run \
 From docker you can run Terraform commands with debug mode
 
 ```bash
-# TF_LOG=DEBUG terraform apply
+$ TF_LOG=DEBUG terraform apply
 2019-06-08T19:36:01.047Z [DEBUG] plugin.terraform-provider-commercetools_v0.9.0: Response: {"statusCode":401,"message":"Please provide valid
 client credentials using HTTP Basic Authentication.","errors":[{"code":"invalid_client","message":"Please provide valid client credentials us
 ing HTTP Basic Authentication."}],"error":"invalid_client","error_description":"Please provide valid client credentials using HTTP Basic Auth
 entication."}
 ```
 
-
 Gotchas
 -------
 
 - `master` version of the Commercetools Provider does not work, it throws error when executing `apply`
-- Commercetools provider version 0.9 only works with Terraform version 0.11
+- Commercetools provider version 0.9 only works with Terraform version 0.11 (0.12 is the latest which it doesn't work with, 0.12 has been release quite recently)
 
 Todo
 ----
@@ -234,8 +235,9 @@ Todo
 - [ ] ! Remove aws/terraform.tfstate
 - [ ] Before making it public remove all references to `lego-poc`
 - [ ] Extend POC to add ability to deploy between multiple accounts
-- [ ] S3 enable lifecycle rules
+- [ ] S3 enable/disable lifecycle rules
 - [ ] Add tags to all `aws` resources
+- [ ] AWS Secrets are being stored in the state and potentially state should be encrypted
 
 Resources
 ---------

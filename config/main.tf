@@ -36,6 +36,21 @@ resource "commercetools_product_type" "gift_card_type" {
       name = "boolean"
     }
   }
+
+  attribute {
+    name = "shippingApplied"
+
+    label = {
+      en = "Whatever"
+      pl = "Cokolwiek"
+    }
+
+    required = false
+
+    type {
+      name = "boolean"
+    }
+  }
 }
 
 resource "commercetools_product_type" "hardgoods_type" {

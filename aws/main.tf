@@ -23,6 +23,7 @@ resource "aws_dynamodb_table" "terraform_state_lock" {
   }
 }
 
+# From here you see specific configuration for Commercetools to create a subscription
 resource "aws_iam_user" "commercetools_subscription" {
   name = "commercetools-subscription"
   path = "/commercetools/"
