@@ -58,6 +58,15 @@ resource "aws_iam_user_policy" "ci_user" {
           "ssm:GetParameter"
         ],
         "Resource": "arn:aws:ssm:*:406575831881:parameter/api/commercetools/*"
+      },
+      {
+        "Effect": "Allow",
+        "Action": [
+          "sqs:ListQueues",
+          "sqs:GetQueueUrl",
+          "sqs:GetQueueAttributes"
+        ],
+        "Resource": "*"
       }
   ]
 }
