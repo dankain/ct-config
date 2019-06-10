@@ -30,4 +30,4 @@ jobs:
 
             terraform init ./config
 
-            terraform plan ./config
+            terraform plan ./config -var "subscription_access_key=${CTP_SUBSCRIPTION_ACCESS_KEY}" -var "subscriptoin_secret_key=${CTP_SUBSCRIPTION_SECRET_KEY}"
