@@ -28,6 +28,10 @@ jobs:
             
             echo ${CTP_PROJECT_KEY}
 
-            terraform init ./config
+            cd ./config
 
-            terraform plan ./config -var "subscription_access_key=${CTP_SUBSCRIPTION_ACCESS_KEY}" -var "subscriptoin_secret_key=${CTP_SUBSCRIPTION_SECRET_KEY}"
+            terraform init
+
+            terraform plan -var "subscription_access_key=${CTP_SUBSCRIPTION_ACCESS_KEY}" -var "subscriptoin_secret_key=${CTP_SUBSCRIPTION_SECRET_KEY}"
+
+            terraform apply --auto-approve -var "subscription_access_key=${CTP_SUBSCRIPTION_ACCESS_KEY}" -var "subscriptoin_secret_key=${CTP_SUBSCRIPTION_SECRET_KEY}"
