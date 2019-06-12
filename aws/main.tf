@@ -93,13 +93,13 @@ resource "aws_ssm_parameter" "ctp_subscription_secret_key" {
 resource "aws_ssm_parameter" "ci_access_key" {
   name  = "/api/circleci/${var.ctp_project_id}/access_key"
   type  = "SecureString"
-  value = "${aws_iam_access_key.commercetools_subscription.id}"
+  value = "${aws_iam_access_key.ci_user.id}"
 }
 
 resource "aws_ssm_parameter" "ci_secret_key" {
   name  = "/api/circleci/${var.ctp_project_id}/secret_key"
   type  = "SecureString"
-  value = "${aws_iam_access_key.commercetools_subscription.secret}"
+  value = "${aws_iam_access_key.ci_user.secret}"
 }
 
 resource "aws_ssm_parameter" "tf_bucket_name" {
