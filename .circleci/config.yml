@@ -26,12 +26,12 @@ jobs:
 
             export CTP_SUBSCRIPTION_SECRET_KEY=$(aws ssm get-parameter --name /api/commercetools/${CTP_PROJECT_KEY}/subscription_secret_key --with-decryption | jq -r '.Parameter.Value')
 
-            export TF_VAR_terraform_bucket=$(aws ssm get-parameter --name /api/commercetools/${CTP_PROJECT_KEY}/tf_bucket_name | jq -r '.Parameter.Value')
+            export TF_BUCKET_NAME=$(aws ssm get-parameter --name /api/commercetools/${CTP_PROJECT_KEY}/tf_bucket_name | jq -r '.Parameter.Value')
             
             cd ./config
 
-            terraform init
+            terraform init -backend-config "terraform_bucket=${TF_BUCKET_NAME}"
 
-            terraform plan -var "subscription_access_key=${CTP_SUBSCRIPTION_ACCESS_KEY}" -var "subscriptoin_secret_key=${CTP_SUBSCRIPTION_SECRET_KEY}"
+            terraform plan -var "subscription_access_key=${CTP_SUBSCRIPTION_ACCESS_KEY}" -var "subscriptoin_secret_key=${CTP_SUBSCRIPTION_SECRET_KEY}" -backend-config "terraform_bucket=${TF_BUCKET_NAME}"
 
-            terraform apply --auto-approve -var "subscription_access_key=${CTP_SUBSCRIPTION_ACCESS_KEY}" -var "subscriptoin_secret_key=${CTP_SUBSCRIPTION_SECRET_KEY}"
+            terraform apply --auto-approve -var "subscription_access_key=${CTP_SUBSCRIPTION_ACCESS_KEY}" -var "subscriptoin_secret_key=${CTP_SUBSCRIPTION_SECRET_KEY}" -backend-config "terraform_bucket=${TF_BUCKET_NAME}"
