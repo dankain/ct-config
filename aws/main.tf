@@ -81,13 +81,25 @@ resource "aws_ssm_parameter" "ctp_scope" {
 resource "aws_ssm_parameter" "ctp_subscription_access_key" {
   name  = "/api/commercetools/${var.ctp_project_id}/subscription_access_key"
   type  = "SecureString"
-  value = "${aws_iam_access_key.ci_user.id}"
+  value = "${aws_iam_access_key.commercetools_subscription.id}"
 }
 
 resource "aws_ssm_parameter" "ctp_subscription_secret_key" {
   name  = "/api/commercetools/${var.ctp_project_id}/subscription_secret_key"
   type  = "SecureString"
-  value = "${aws_iam_access_key.ci_user.secret}"
+  value = "${aws_iam_access_key.commercetools_subscription.secret}"
+}
+
+resource "aws_ssm_parameter" "ci_access_key" {
+  name  = "/api/circleci/${var.ctp_project_id}/access_key"
+  type  = "SecureString"
+  value = "${aws_iam_access_key.commercetools_subscription.id}"
+}
+
+resource "aws_ssm_parameter" "ci_secret_key" {
+  name  = "/api/circleci/${var.ctp_project_id}/secret_key"
+  type  = "SecureString"
+  value = "${aws_iam_access_key.commercetools_subscription.secret}"
 }
 
 resource "aws_ssm_parameter" "tf_bucket_name" {
@@ -153,10 +165,9 @@ resource "aws_iam_user" "commercetools_subscription" {
 }
 
 # Todo: at the moment it requires admin to login and create access key through console
-# resource "aws_iam_access_key" "commercetools_subscription" {
-#   user = "${aws_iam_user.commercetools_subscription.name}"
-#   pgp_key = "keybase:kamil" # todo: parameterise 
-# }
+resource "aws_iam_access_key" "commercetools_subscription" {
+  user = "${aws_iam_user.commercetools_subscription.name}"
+}
 
 resource "aws_iam_user_policy" "commercetools_subscription" {
   name = "test"

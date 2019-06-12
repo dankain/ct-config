@@ -225,7 +225,7 @@ scripts/local-terraform.sh apply --auto-approve -var "subscription_access_key=${
 
 Verity product types applied correctly:
 ```bash
-curl -H "Authorization: Bearer ${CT_TOKEN}" https://api.sphere.io/${CTP_PROJECT_KEY}/product-types/ | jq
+curl -H "Authorization: Bearer ${CTP_TOKEN}" https://api.sphere.io/${CTP_PROJECT_KEY}/product-types/ | jq
 ```
 
 Debug
@@ -277,11 +277,11 @@ Gotchas
 
 - `master` version of the Commercetools Provider does not work, it throws error when executing `apply`
 - Commercetools provider version 0.9 only works with Terraform version 0.11 (0.12 is the latest which it doesn't work with, 0.12 has been release quite recently)
+- when terraform fails with an error the lock stays in `dynamodb` and you have to manually clean-up, it could be seen as positive because someone will have to investigate before reruning
 
 Todo
 ----
 
-- [ ] ! Remove aws/terraform.tfstate
 - [ ] Before making it public remove all references to `lego-poc`
 - [ ] Extend POC to add ability to deploy between multiple accounts
 - [ ] S3 enable/disable lifecycle rules
