@@ -14,10 +14,9 @@ variable "terraform_lock_table" {
 # https://www.terraform.io/docs/backends/types/s3.html
 terraform {
   backend "s3" {
-    bucket         = "${var.terraform_bucket}"
     key            = "network/terraform.tfstate"
     region         = "us-east-1"
-    dynamodb_table = "${var.terraform_lock_table}"
+    dynamodb_table = "terraform-state-lock"
 
     # encrypted = true
   }
