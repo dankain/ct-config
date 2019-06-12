@@ -1,0 +1,6 @@
+ctp_project_id = ""
+ctp_client_id = ""
+ctp_secret = ""
+ctp_scope = ""
+terraform_bucket_name = ""
+# terraform_table_name = ""

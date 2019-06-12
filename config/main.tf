@@ -1,12 +1,23 @@
-variable "subscription_access_key" {}
-variable "subscriptoin_secret_key" {}
+variable "subscription_access_key" {
+  type = "string"
+}
+variable "subscriptoin_secret_key" {
+  type = "string"
+}
+variable "terraform_bucket" {
+  type = "string"
+}
+variable "terraform_lock_table" {
+  type = "string"
+  default = "terraform-state-lock"
+}
 # https://www.terraform.io/docs/backends/types/s3.html
 terraform {
   backend "s3" {
-    bucket         = "terraform-ct-state-dev"
+    bucket         = "${var.terraform_bucket}"
     key            = "network/terraform.tfstate"
     region         = "us-east-1"
-    dynamodb_table = "terraform-state-lock"
+    dynamodb_table = "${var.terraform_lock_table}"
 
     # encrypted = true
   }

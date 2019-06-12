@@ -32,7 +32,53 @@ Error assumptions
 - the configuration fails all should stop
 - if next steps fails it will required manual intervention
 
-TODO: explain directories and their purpose
+What is what
+------------
+
+| Directory | Description |
+|-----------|-------------|
+| `circleci` | example CircleCI configuration file |
+| `aws` | example terraform template to initialise example ci user and commercetools subscription queue |
+| `config` | example commercetools template to initialise commercetools assets |
+| `scripts` | scripts to simplify process of creating assets in aws, commercetools and docker |
+
+!Important!
+---------
+
+IT IS NOT PRODUCTION READY. IT IS DEMONSTRATION ONLY. AFTER USING PLEASE REMOVE ACCESS KEYS CREATED BY SCRIPTS.
+
+TLDR
+----
+
+If you want to get things running fast:
+1. Fork repository to your github/bitbucket repository
+2. Create a project in commercetools and populate `aws/main.tfvar` with values created for api client
+
+| Value | Description |
+|-------|-------------|
+|ctp_project_id| a commercetools project id |
+|ctp_client_id| a commercetools client id |
+|ctp_secret| a commercetools secret |
+|ctp_scope| a commercetools scope |
+|terraform_bucket_name| a bucket where terraform will be stored, it has to be unique|
+|terraform_table_name| a dynamodb table to lock terraform table|
+
+```bash
+scripts/aws-init.sh init
+# check that all is ok before running apply
+scripts/aws-init.sh plan
+scripts/aws-init.sh apply --auto-approve
+```
+
+2. Login to CircleCI project using same github/bitbucket credentials and setup the project by adding following envrionment variables:
+|Name  | Description |
+|------|-------------|
+|AWS_ACCESS_KEY_ID | access key for ci user created as part of previous step, value can be retrieved either through aws console inside the System Manager > Parameter Store under `subscription_access_key` |
+|AWS_SECRET_ACCESS_KEY |access key for ci user created as part of previous step, value can be retrieved either through aws console inside the System Manager > Parameter Store under `subscription_secret_key`  |
+|AWS_DEFAULT_REGION | e.g. `us-east-1` |
+|CTP_PROJECT_KEY| commercetools project key defined during creation |
+
+
 
 Step 1 - Configure AWS CI User
 ------
@@ -53,6 +99,7 @@ Configure CircleCI by navigating to project list and select a gear box. You will
 | AWS_ACCESS_KEY_ID | value from credentials.csv | 
 | AWS_SECRET_ACCESS_KEY | value from credentials.csv | 
 | AWS_DEFAULT_REGION | value default region e.g us-east-1 |
+| CTP_PROJECT_KEY | commercetools project key defined during creation |
 
 Step 3 - Configure EC2 Parameters
 ------
@@ -78,14 +125,14 @@ aws ssm get-parameters --names \
 Test if the authentication works by calling following method (you have to have [jq](https://stedolan.github.io/jq/) utility installed)
 
 ```bash
-CT_CLIENT_ID=$(aws ssm get-parameter --name /api/commercetools/lego-poc/client_id --with-decryption | jq -r '.Parameter.Value')
-CT_SECRET=$(aws ssm get-parameter --name /api/commercetools/lego-poc/secret --with-decryption | jq -r '.Parameter.Value')
-CT_SCOPE=$(aws ssm get-parameter --name /api/commercetools/lego-poc/scope --with-decryption | jq -r '.Parameter.Value')
-CT_AUTH_RESULT=$(curl https://auth.sphere.io/oauth/token \
-     --basic --user "${CT_CLIENT_ID}:${CT_SECRET}" \
+export CTP_CLIENT_SECRET=$(aws ssm get-parameter --name /api/commercetools/lego-poc/secret --with-decryption | jq -r '.Parameter.Value')
+export CTP_CLIENT_ID=$(aws ssm get-parameter --name /api/commercetools/lego-poc/client_id --with-decryption | jq -r '.Parameter.Value')
+export CTP_SCOPES=$(aws ssm get-parameter --name /api/commercetools/lego-poc/scope --with-decryption | jq -r '.Parameter.Value')
+export CTP_AUTH_RESULT=$(curl https://auth.sphere.io/oauth/token \
+     --basic --user "${CTP_CLIENT_ID}:${CTP_CLIENT_SECRET}" \
      -X POST \
-     -d "grant_type=client_credentials&scope=${CT_SCOPE}")
-echo ${CT_AUTH_RESULT}
+     -d "grant_type=client_credentials&scope=${CTP_SCOPES}")
+echo ${CTP_AUTH_RESULT}
 ```
 
 If all is ok you should get following output:
@@ -101,14 +148,20 @@ If all is ok you should get following output:
 
 Execute example query using token:
 ```bash
-CT_TOKEN=$(echo $CT_AUTH_RESULT | jq -r '.access_token')
-curl -H "Authorization: Bearer ${CT_TOKEN}" https://api.sphere.io/lego-poc/categories
+CTP_TOKEN=$(echo $CTP_AUTH_RESULT | jq -r '.access_token')
+curl -H "Authorization: Bearer ${CTP_TOKEN}" https://api.sphere.io/lego-poc/categories
 ```
 
 Step 4 - Configure CI User Policies
 ----------------
 
-TODO:....
+Configuration to create AWS resources. 
+
+Create `s3` bucket for storing state and `dynamodb` to lock state update
+```bash
+scripts/aws-init.sh init
+scripts/aws-init.sh apply --auto-approve
+```
 
 Step 5 - Publish Docker Image
 ----------------
@@ -131,11 +184,6 @@ Needed tools:
 - docker
 - git 
 
-Create `s3` bucket for storing state and `dynamodb` to lock state update
-```bash
-scripts/aws-init.sh init
-scripts/aws-init.sh apply --auto-approve
-```
 
 Create a local version of the docker build:
 
@@ -153,9 +201,9 @@ Next export all commerce tools envrionment variables:
 export CTP_PROJECT_KEY=lego-poc
 export CTP_CLIENT_SECRET=$(aws ssm get-parameter --name /api/commercetools/lego-poc/secret --with-decryption | jq -r '.Parameter.Value')
 export CTP_CLIENT_ID=$(aws ssm get-parameter --name /api/commercetools/lego-poc/client_id --with-decryption | jq -r '.Parameter.Value')
+export CTP_SCOPES=$(aws ssm get-parameter --name /api/commercetools/lego-poc/scope --with-decryption | jq -r '.Parameter.Value')
 export CTP_AUTH_URL="https://auth.sphere.io"
 export CTP_API_URL="https://api.sphere.io"
-export CTP_SCOPES=$(aws ssm get-parameter --name /api/commercetools/lego-poc/scope --with-decryption | jq -r '.Parameter.Value')
 export CTP_SUBSCRIPTION_ACCESS_KEY=$(aws ssm get-parameter --name /api/commercetools/lego-poc/subscription_access_key --with-decryption | jq -r '.Parameter.Value')
 export CTP_SUBSCRIPTION_SECRET_KEY=$(aws ssm get-parameter --name /api/commercetools/lego-poc/subscription_secret_key --with-decryption | jq -r '.Parameter.Value')
 ```

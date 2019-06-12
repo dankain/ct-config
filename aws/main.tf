@@ -1,9 +1,40 @@
+variable "ci_user" {
+  type = "string"
+  default = "ci"
+}
+
+variable "terraform_bucket_name" {
+  type = "string"
+}
+
+variable "terraform_table_name" {
+  type = "string"
+  default = "terraform-state-lock"
+}
+
+variable "ctp_project_id" {
+  type = "string"
+}
+variable "ctp_client_id" {
+  type = "string"
+}
+variable "ctp_secret" {
+  type = "string"
+}
+variable "ctp_scope" {
+  type = "string"
+}
+
+
+
 provider "aws" {
   region = "us-east-1"
 }
 
+data "aws_caller_identity" "current" {}
+
 resource "aws_s3_bucket" "terraform_state" {
-  bucket = "terraform-ct-state-dev" # todo: parameterise
+  bucket = "${var.terraform_bucket_name}"
   acl    = "private"
 
   versioning {
@@ -12,7 +43,7 @@ resource "aws_s3_bucket" "terraform_state" {
 }
 
 resource "aws_dynamodb_table" "terraform_state_lock" {
-  name           = "terraform-state-lock"
+  name           = "${var.terraform_table_name}"
   read_capacity  = 1
   write_capacity = 1
   hash_key       = "LockID"
@@ -23,10 +54,52 @@ resource "aws_dynamodb_table" "terraform_state_lock" {
   }
 }
 
+resource "aws_iam_user" "ci_user" {
+  name = "${var.ci_user}"
+}
+
+resource "aws_iam_access_key" "ci_user" {
+  user = "${var.ci_user}"
+}
+
+resource "aws_ssm_parameter" "ctp_client_id" {
+  name  = "/api/commercetools/${var.ctp_project_id}/client_id"
+  type  = "SecureString"
+  value = "${var.ctp_client_id}"
+}
+resource "aws_ssm_parameter" "ctp_secret" {
+  name  = "/api/commercetools/${var.ctp_project_id}/secret"
+  type  = "SecureString"
+  value = "${var.ctp_secret}"
+}
+resource "aws_ssm_parameter" "ctp_scope" {
+  name  = "/api/commercetools/${var.ctp_project_id}/scope"
+  type  = "SecureString"
+  value = "${var.ctp_scope}"
+}
+
+resource "aws_ssm_parameter" "ctp_subscription_access_key" {
+  name  = "/api/commercetools/${var.ctp_project_id}/subscription_access_key"
+  type  = "SecureString"
+  value = "${aws_iam_access_key.ci_user.id}"
+}
+
+resource "aws_ssm_parameter" "ctp_subscription_secret_key" {
+  name  = "/api/commercetools/${var.ctp_project_id}/subscription_secret_key"
+  type  = "SecureString"
+  value = "${aws_iam_access_key.ci_user.secret}"
+}
+
+resource "aws_ssm_parameter" "tf_bucket_name" {
+  name  = "/api/commercetools/${var.ctp_project_id}/tf_bucket_name"
+  type  = "String"
+  value = "${var.terraform_bucket_name}"
+}
+
 # Configure ci user
 resource "aws_iam_user_policy" "ci_user" {
   name = "ci-user"
-  user = "ci"
+  user = "${var.ci_user}"
 
   policy = <<EOF
 {
@@ -57,7 +130,7 @@ resource "aws_iam_user_policy" "ci_user" {
           "ssm:GetParameters",
           "ssm:GetParameter"
         ],
-        "Resource": "arn:aws:ssm:*:406575831881:parameter/api/commercetools/*"
+        "Resource": "arn:aws:ssm:*:${data.aws_caller_identity.current.account_id}:parameter/api/commercetools/*"
       },
       {
         "Effect": "Allow",
@@ -72,8 +145,6 @@ resource "aws_iam_user_policy" "ci_user" {
 }
 EOF
 }
-# ^^ replace account number with configuration from aws 
-
 
 # From here you see specific configuration for Commercetools to create a subscription
 resource "aws_iam_user" "commercetools_subscription" {

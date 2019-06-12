@@ -8,7 +8,7 @@ unset AWS_SESSION_TOKEN
 
 response_file=${TMPDIR}/response.json
 echo Requesting token for MFA: ${token} for account ${account}
-aws sts get-session-token --duration-seconds 43200 --serial-number arn:aws:iam::${account}:mfa/${user} --token-code ${token} > ${response_file}
+aws sts get-session-token --duration-seconds 43200 --serial-number arn:aws:iam::${account}:mfa/${user} --token-code ${token} $* > ${response_file}
 echo Response file ${response_file}
 echo "Run in the terminal"
 echo "export AWS_ACCESS_KEY_ID=$(cat ${response_file} | jq .Credentials.AccessKeyId)"

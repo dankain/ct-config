@@ -3,3 +3,4 @@ credentials.csv
 .terraform
 terraform.tfstate.backup
 terraform.tfstate
+bak
