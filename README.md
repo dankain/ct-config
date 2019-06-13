@@ -71,6 +71,7 @@ scripts/aws-init.sh apply --auto-approve
 ```
 
 2. Login to CircleCI project using same github/bitbucket credentials and setup the project by adding following envrionment variables:
+
 |Name  | Description |
 |------|-------------|
 |AWS_ACCESS_KEY_ID | access key for ci user created as part of previous step, value can be retrieved either through aws console inside the System Manager > Parameter Store under `/api/circleci/{ctp_project_id}/access_key` |
