@@ -52,7 +52,7 @@ TLDR
 
 If you want to get things running fast:
 1. Fork repository to your github/bitbucket repository
-2. Create a project in commercetools and populate `aws/main.tfvar` with values created for api client
+2. Create a project in commercetools and populate `aws/terraform.tfvar` with values created for api client
 
 | Value | Description |
 |-------|-------------|
@@ -73,20 +73,20 @@ scripts/aws-init.sh apply --auto-approve
 2. Login to CircleCI project using same github/bitbucket credentials and setup the project by adding following envrionment variables:
 |Name  | Description |
 |------|-------------|
-|AWS_ACCESS_KEY_ID | access key for ci user created as part of previous step, value can be retrieved either through aws console inside the System Manager > Parameter Store under `/api/circleci/{}/access_key` |
-|AWS_SECRET_ACCESS_KEY |access key for ci user created as part of previous step, value can be retrieved either through aws console inside the System Manager > Parameter Store under `/api/circleci/{}/secret_key`  |
+|AWS_ACCESS_KEY_ID | access key for ci user created as part of previous step, value can be retrieved either through aws console inside the System Manager > Parameter Store under `/api/circleci/{ctp_project_id}/access_key` |
+|AWS_SECRET_ACCESS_KEY |access key for ci user created as part of previous step, value can be retrieved either through aws console inside the System Manager > Parameter Store under `/api/circleci/{ctp_project_id}/secret_key`  |
 |AWS_DEFAULT_REGION | e.g. `us-east-1` |
 |CTP_PROJECT_KEY| commercetools project key defined during creation |
 
-Step 1 - Configure AWS CI User
+Step 1 - Configure AWS Resources
 ------
+Create a project in commercetools and populate `aws/terraform.tfvar` with values created for api client
 
-Create a AWS account which gives CircleCI access to AWS infrastructure to pull configuration required to setup subscription in commercetools.
-
-1. Login to AWS 
-2. Create a user named e.g. CI by giving only programmatic access
-3. Download credentials.csv
-
+Create `s3` bucket for storing state, `dynamodb` to lock state update, parameters and ci user with policies.
+```bash
+scripts/aws-init.sh init
+scripts/aws-init.sh apply --auto-approve
+```
 Step 2 - Configure CircleCI
 -------
 
@@ -94,38 +94,33 @@ Configure CircleCI by navigating to project list and select a gear box. You will
 
 | Name | Value |
 | ---- | ----- |
-| AWS_ACCESS_KEY_ID | value from credentials.csv | 
-| AWS_SECRET_ACCESS_KEY | value from credentials.csv | 
+| AWS_ACCESS_KEY_ID | value from AWS Parameter Store for parameter `/api/circleci/{ctp_project_id}/access_key` | 
+| AWS_SECRET_ACCESS_KEY | value from AWS Parameter Store for parameter `/api/circleci/{ctp_project_id}/secret_key` | 
 | AWS_DEFAULT_REGION | value default region e.g us-east-1 |
 | CTP_PROJECT_KEY | commercetools project key defined during creation |
 
 Step 3 - Configure EC2 Parameters
 ------
 
-Configure AWS platform with secrets to access commercetools platform:
+Verify all parameters have been added correctly
 
 ```bash
-aws ssm put-parameter --name /api/commercetools/<replace_with_project_name>/client_id --type SecureString --value <commercetools_client_id>
-aws ssm put-parameter --name /api/commercetools/<replace_with_project_name>/secret --type SecureString --value <commercetools_secret>
-aws ssm put-parameter --name /api/commercetools/<replace_with_project_name>/scope --type SecureString --value <commercetools_scope>
-aws ssm put-parameter --name /api/commercetools/lego-poc/subscription_access_key --type SecureString --value <aws_access_key>
-aws ssm put-parameter --name /api/commercetools/lego-poc/subscription_secret_key --type SecureString --value <aws_secret_key>
-```
-
-Verify all parameters have been added correctly:
-
-```bash
+export CTP_PROJECT_KET=<commercetools_project_key>
 aws ssm get-parameters --names \
-    /api/commercetools/<replace_with_project_name>/client_id /api/commercetools/<replace_with_project_name>/secret /api/commercetools/<replace_with_project_name>/scope \
+    /api/commercetools/${CTP_PROJECT_KEY}/client_id \
+    /api/commercetools/${CTP_PROJECT_KEY}/secret \
+    /api/commercetools/${CTP_PROJECT_KEY}/scope \
+    /api/commercetools/${CTP_PROJECT_KEY}/subscription_access_key \
+    /api/commercetools/${CTP_PROJECT_KEY}/subscription_secret_key \
     --with-decryption
 ```
 
 Test if the authentication works by calling following method (you have to have [jq](https://stedolan.github.io/jq/) utility installed)
 
 ```bash
-export CTP_CLIENT_SECRET=$(aws ssm get-parameter --name /api/commercetools/lego-poc/secret --with-decryption | jq -r '.Parameter.Value')
-export CTP_CLIENT_ID=$(aws ssm get-parameter --name /api/commercetools/lego-poc/client_id --with-decryption | jq -r '.Parameter.Value')
-export CTP_SCOPES=$(aws ssm get-parameter --name /api/commercetools/lego-poc/scope --with-decryption | jq -r '.Parameter.Value')
+export CTP_CLIENT_SECRET=$(aws ssm get-parameter --name /api/commercetools/${CTP_PROJECT_KEY}/secret --with-decryption | jq -r '.Parameter.Value')
+export CTP_CLIENT_ID=$(aws ssm get-parameter --name /api/commercetools/${CTP_PROJECT_KEY}/client_id --with-decryption | jq -r '.Parameter.Value')
+export CTP_SCOPES=$(aws ssm get-parameter --name /api/commercetools/${CTP_PROJECT_KEY}/scope --with-decryption | jq -r '.Parameter.Value')
 export CTP_AUTH_RESULT=$(curl https://auth.sphere.io/oauth/token \
      --basic --user "${CTP_CLIENT_ID}:${CTP_CLIENT_SECRET}" \
      -X POST \
@@ -147,41 +142,30 @@ If all is ok you should get following output:
 Execute example query using token:
 ```bash
 CTP_TOKEN=$(echo $CTP_AUTH_RESULT | jq -r '.access_token')
-curl -H "Authorization: Bearer ${CTP_TOKEN}" https://api.sphere.io/lego-poc/categories
+curl -H "Authorization: Bearer ${CTP_TOKEN}" https://api.sphere.io/${CTP_PROJECT_KEY}/categories
 ```
 
-Step 4 - Configure CI User Policies
+Step 4 - Publish Docker Image
 ----------------
 
-Configuration to create AWS resources. 
-
-Create `s3` bucket for storing state and `dynamodb` to lock state update
-```bash
-scripts/aws-init.sh init
-scripts/aws-init.sh apply --auto-approve
-```
-
-Step 5 - Publish Docker Image
-----------------
-
-If you don't have a user in docker hub create an account to publish an image. 
+If you don't have a user in docker hub create an account to publish an image. If you change the docker repository location you will have to update CircleCI config.yaml file.
 
 ```bash
-docker tag cmt-build kamaz/cmt-build
-docker push kamaz/cmt-build
+scripts/create-build-images.sh
+docker tag ct-build cabiri/ct-build
+docker push cabiri/ct-build
 ```
 
-Step 6 - Connect all the piecies
+Step 5 - Connect all the piecies
 ----------------
 
-TODO:....
+All should be in place now. It should be just enough to `push` repository and CircleCI should build all.
 
 How to run locally
 ----------------
 Needed tools:
 - docker
 - git 
-
 
 Create a local version of the docker build:
 
@@ -191,24 +175,24 @@ scripts/create-build-images.sh
 
 Verify that image is created:
 ```bash
-docker images | grep cmt-build
+docker images | grep ct-build
 ```
 
 Next export all commerce tools envrionment variables:
 ```bash
-export CTP_PROJECT_KEY=lego-poc
-export CTP_CLIENT_SECRET=$(aws ssm get-parameter --name /api/commercetools/lego-poc/secret --with-decryption | jq -r '.Parameter.Value')
-export CTP_CLIENT_ID=$(aws ssm get-parameter --name /api/commercetools/lego-poc/client_id --with-decryption | jq -r '.Parameter.Value')
-export CTP_SCOPES=$(aws ssm get-parameter --name /api/commercetools/lego-poc/scope --with-decryption | jq -r '.Parameter.Value')
+export CTP_PROJECT_KEY=<commercetools_project_id>
+export CTP_CLIENT_SECRET=$(aws ssm get-parameter --name /api/commercetools/${CTP_PROJECT_KEY}/secret --with-decryption | jq -r '.Parameter.Value')
+export CTP_CLIENT_ID=$(aws ssm get-parameter --name /api/commercetools/${CTP_PROJECT_KEY}/client_id --with-decryption | jq -r '.Parameter.Value')
+export CTP_SCOPES=$(aws ssm get-parameter --name /api/commercetools/${CTP_PROJECT_KEY}/scope --with-decryption | jq -r '.Parameter.Value')
 export CTP_AUTH_URL="https://auth.sphere.io"
 export CTP_API_URL="https://api.sphere.io"
-export CTP_SUBSCRIPTION_ACCESS_KEY=$(aws ssm get-parameter --name /api/commercetools/lego-poc/subscription_access_key --with-decryption | jq -r '.Parameter.Value')
-export CTP_SUBSCRIPTION_SECRET_KEY=$(aws ssm get-parameter --name /api/commercetools/lego-poc/subscription_secret_key --with-decryption | jq -r '.Parameter.Value')
+export CTP_SUBSCRIPTION_ACCESS_KEY=$(aws ssm get-parameter --name /api/commercetools/${CTP_PROJECT_KEY}/subscription_access_key --with-decryption | jq -r '.Parameter.Value')
+export CTP_SUBSCRIPTION_SECRET_KEY=$(aws ssm get-parameter --name /api/commercetools/${CTP_PROJECT_KEY}/subscription_secret_key --with-decryption | jq -r '.Parameter.Value')
 ```
 
 Initialise the terraform:
 ```bash
-scripts/local-terraform.sh init
+scripts/local-terraform.sh init -backend-config="bucket=terraform-ct-state-dev-cab"
 ```
 
 Run plan on for deployment:
@@ -257,7 +241,7 @@ docker run \
     --entrypoint '/bin/sh' \
     -it \
     --rm \
-    cmt-build
+    ct-build
 ```
 
 From docker you can run Terraform commands with debug mode
@@ -280,7 +264,6 @@ Gotchas
 Todo
 ----
 
-- [ ] Before making it public remove all references to `lego-poc`
 - [ ] Extend POC to add ability to deploy between multiple accounts
 - [ ] S3 enable/disable lifecycle rules
 - [ ] Add tags to all `aws` resources

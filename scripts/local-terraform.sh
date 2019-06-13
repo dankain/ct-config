@@ -20,5 +20,5 @@ docker run \
     --env AWS_SECRET_ACCESS_KEY \
     --env AWS_SESSION_TOKEN \
     -v ${PWD}/config:/config \
-    cmt-build \
+    ct-build \
     ${args}

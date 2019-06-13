@@ -1,2 +1,2 @@
 #!/bin/bash
-docker build -t cmt-build .
+docker build -t ct-build .
