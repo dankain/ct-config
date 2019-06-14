@@ -19,6 +19,7 @@ docker run \
     --env AWS_ACCESS_KEY_ID \
     --env AWS_SECRET_ACCESS_KEY \
     --env AWS_SESSION_TOKEN \
+    --env AWS_DEFAULT_REGION \
     -v ${PWD}/config:/config \
     ct-build \
     ${args}
