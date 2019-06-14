@@ -4,3 +4,5 @@ credentials.csv
 terraform.tfstate.backup
 terraform.tfstate
 bak
+.idea
+*.iml
