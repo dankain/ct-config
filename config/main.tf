@@ -100,3 +100,22 @@ data "aws_region" "current" {
 
 }
 
+resource "commercetools_subscription" "test_subscription" {
+  key = "test-subscription"
+  # https://devops.stackexchange.com/questions/79/how-can-i-manage-secrets-in-tf-and-tfstate
+  destination {
+    type          = "SQS"
+    queue_url     = "${data.aws_sqs_queue.commercetools_sqs.id}"
+    access_key    = "${var.subscription_access_key}"
+    access_secret = "${var.subscriptoin_secret_key}"
+    region        = "${data.aws_region.current.name}"
+  }
+
+  changes {
+    resource_type_ids = ["product", "product-type"]
+  }
+
+  message {
+    resource_type_id = "product"
+  }
+}
