@@ -152,7 +152,7 @@ Step 4 - Publish Docker Image
 If you don't have a user in docker hub create an account to publish an image. If you change the docker repository location you will have to update CircleCI config.yaml file.
 
 ```bash
-scripts/create-build-images.sh
+scripts/create-build-image.sh
 docker tag ct-build cabiri/ct-build
 docker push cabiri/ct-build
 ```
