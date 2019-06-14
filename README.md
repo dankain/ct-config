@@ -171,7 +171,7 @@ Needed tools:
 Create a local version of the docker build:
 
 ```bash
-scripts/create-build-images.sh
+scripts/create-build-image.sh
 ```
 
 Verify that image is created:
