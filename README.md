@@ -106,7 +106,7 @@ Step 3 - Configure EC2 Parameters
 Verify all parameters have been added correctly
 
 ```bash
-export CTP_PROJECT_KET=<commercetools_project_key>
+export CTP_PROJECT_KEY=<commercetools_project_key>
 aws ssm get-parameters --names \
     /api/commercetools/${CTP_PROJECT_KEY}/client_id \
     /api/commercetools/${CTP_PROJECT_KEY}/secret \
