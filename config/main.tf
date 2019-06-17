@@ -62,21 +62,6 @@ resource "commercetools_product_type" "hardgoods_type" {
   description = "Hardgoods Product"
 
   attribute {
-    name = "weigth"
-
-    label = {
-      en = "Weigth of the product"
-      pl = "Waga produktu"
-    }
-
-    required = true
-
-    type {
-      name = "number"
-    }
-  }
-
-  attribute {
     name = "height"
 
     label = {
