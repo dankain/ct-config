@@ -193,7 +193,7 @@ export CTP_SUBSCRIPTION_SECRET_KEY=$(aws ssm get-parameter --name /api/commercet
 
 Initialise the terraform:
 ```bash
-scripts/local-terraform.sh init -backend-config="bucket=terraform-ct-state-dev-cab"
+scripts/local-terraform.sh init -backend-config="cabiri-ct-config"
 ```
 
 Run plan on for deployment:
